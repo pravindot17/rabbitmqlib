@@ -11,7 +11,8 @@ libR.channel = {};
 module.exports = {
     __init,
     __addToQueue,
-    __fetchFromQueue
+    __fetchFromQueue,
+    __confirmAck
 }
 
 function __init(config) {
@@ -51,23 +52,28 @@ function __addToQueue(queueName, message) {
     });
 }
 
-function __fetchFromQueue(queueName) {
-    return new Promise((resolve, reject) => {
-        if(libR.conn && libR.channel[queueName]) {
-            libR.channel[queueName].assertQueue(queueName, {durable: true}).then(function(ok) {
-                return ok;
-            }).then(ok => {
-                return libR.channel[queueName].consume(queueName, (message) => {
-                    libR.channel[queueName].ack(message);
-                    resolve(message.content.toString());
-                });
-            })
-            .catch(err => {
-                console.log('Receiving from queue failed', err);
-                reject(err);
-            });
-        } else {
-            reject(new Error('Rabbitmq connection or channel not found'));
-        }
-    });
+function __fetchFromQueue(queueName, callback) {
+    if(libR.conn && libR.channel[queueName]) {
+        libR.channel[queueName].assertQueue(queueName, {durable: true}).then(function(ok) {
+            return ok;
+        }).then(ok => {
+            return libR.channel[queueName].consume(queueName, (message) => {
+                callback(null, message);
+            }, {noAck: false});
+        })
+        .catch(err => {
+            console.log('Receiving from queue failed', err);
+            callback(err);
+        });
+    } else {
+        callback(new Error('Rabbitmq connection or channel not found'));
+    }
+}
+
+function __confirmAck(queueName, message) {
+    if(libR.conn && libR.channel[queueName]) {
+        libR.channel[queueName].ack(message);
+    } else {
+        throw new Error('Rabbitmq connection or channel not found');
+    }
 }

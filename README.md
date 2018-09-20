@@ -20,7 +20,11 @@ rabbitMq.__init(config).then((res) => {
 await rabbitMq.__addToQueue(config.queueName, 'This is my first message');
 
 // Subscriber: use this code to receive the message from queue
-rabbitMq.__fetchFromQueue(config.queueName).then(message => {
-	console.log('Received from queue', message);
-}).catch(console.error);
+rabbitMq.__fetchFromQueue(config.queueName, (err, message) => {
+    if(err) throw err;
+    console.log('Received from queue', JSON.stringify(message.content));
+
+    // just to send the acknowledgement
+    rabbitMq.__confirmAck(config.queueName, message);
+});
 ```
