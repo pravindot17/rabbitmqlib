@@ -8,7 +8,11 @@ let rabbitMq = require('rabbitmqlib');
 
 let config = {
     'host': 'amqp://username:passsword@localhost:5672/vHostName?heartbeat=30',
-    'queueName': 'qMyFirstQueue'
+    'queueName': 'qMyFirstQueue',
+    'options': {
+        'messageTtl': 15000,
+        'durable': true
+    }
 }
 
 // init the connection in your bootstrap file using following code
@@ -17,10 +21,10 @@ rabbitMq.__init(config).then((res) => {
 }).catch(console.error);
 
 // Publisher: use this code to send the message to queue
-await rabbitMq.__addToQueue(config.queueName, 'This is my first message');
+await rabbitMq.__addToQueue(config, 'This is my first message');
 
 // Subscriber: use this code to receive the message from queue
-rabbitMq.__fetchFromQueue(config.queueName, (err, message) => {
+rabbitMq.__fetchFromQueue(config, (err, message) => {
     if(err) throw err;
     console.log('Received from queue', JSON.stringify(message.content));
 

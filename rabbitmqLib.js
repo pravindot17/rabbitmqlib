@@ -35,11 +35,11 @@ function __init(config) {
     });
 }
 
-function __addToQueue(queueName, message) {
+function __addToQueue(config, message) {
     return new Promise((resolve, reject) => {
-        if(libR.conn && libR.channel[queueName]) {
-            libR.channel[queueName].assertQueue(queueName).then(function(ok) {
-                return libR.channel[queueName].sendToQueue(queueName, new Buffer(JSON.stringify(message)), {persistent: true});
+        if(libR.conn && libR.channel[config.queueName]) {
+            libR.channel[config.queueName].assertQueue(config.queueName, config.options).then(function(ok) {
+                return libR.channel[config.queueName].sendToQueue(config.queueName, new Buffer(JSON.stringify(message)), {persistent: true});
             }).then(ok => {
                 resolve('success');
             }).catch(err => {
@@ -52,12 +52,12 @@ function __addToQueue(queueName, message) {
     });
 }
 
-function __fetchFromQueue(queueName, callback) {
-    if(libR.conn && libR.channel[queueName]) {
-        libR.channel[queueName].assertQueue(queueName, {durable: true}).then(function(ok) {
+function __fetchFromQueue(config, callback) {
+    if(libR.conn && libR.channel[config.queueName]) {
+        libR.channel[config.queueName].assertQueue(config.queueName, config.options).then(function(ok) {
             return ok;
         }).then(ok => {
-            return libR.channel[queueName].consume(queueName, (message) => {
+            return libR.channel[config.queueName].consume(config.queueName, (message) => {
                 callback(null, message);
             }, {noAck: false});
         })
